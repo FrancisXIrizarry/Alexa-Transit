@@ -1,8 +1,12 @@
 
 import googlemaps
 from datetime import datetime
+import sys
+import json
+from pygments import highlight, lexers, formatters
 
-def httpsFunctionCall(StartLoc, EndLoc):
+
+def httpsFunctionCall(StartLoc, EndLoc, travelType):
 
 	gmaps = googlemaps.Client(key='AIzaSyA1_wX9RiSvGhsrM8_JwFtcCeQ3b5LQfXM')
 
@@ -17,9 +21,11 @@ def httpsFunctionCall(StartLoc, EndLoc):
 	now = datetime.now()
 	directions_result = gmaps.directions(StartLoc,
                                      EndLoc,
-                                     mode="transit",
+                                     mode=travelType,
                                      departure_time=now)
-	print(directions_result)
+	#print(directions_result)
+	formatted_json = json.dumps(directions_result, sort_keys=True, indent=4)
+	#colorful_json = highlight(unicode(formatted_json, 'UTF-8'), lexers.JsonLexer(), 			 	 formatters.TerminalFormatter())
+	print(formatted_json)
 
 	return directions_result
-
