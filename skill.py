@@ -4,6 +4,10 @@
 
 import logging
 import requests
+import googlemaps
+import json
+
+from datetime import datetime
 
 from ask_sdk_core.skill_builder import SkillBuilder
 from ask_sdk_core.dispatch_components import AbstractRequestHandler
@@ -26,26 +30,61 @@ class LaunchRequestHandler(AbstractRequestHandler):
         # type: (HandlerInput) -> bool
         return is_request_type("LaunchRequest")(handler_input)
 
+
+    def find_key(strInput, search):
+        list_string = strInput.split()
+        loc = list_string[list_string.index(search) + 1]
+
+        return loc
+
     def handle(self, handler_input):
-        # type: (HandlerInput) -> Response
-        start = handler_input["destination_addresses"]
-        finish = handler_input["origin_addresses"]
 
-        payload = {"origins" : start, "destinations" : finish, "key" : "AIzaSyA1_wX9RiSvGhsrM8_JwFtcCeQ3b5LQfXM"}
-
-        req = requests.post("https://maps.googleapis.com/maps/api/distancematrix/json", params = payload )
-        res = req.json()
-        time = handler_input["rows"]["elements"]["duration"]["text"]
-        travel_mode = "Running"
-        speech = "It will take " + time + "to reach " + finish + "from " + start + "using " + travel_mode
-
-        speech_text = "Welcome to the Alexa Skills Kit, you can say hello!"
+        speech = "You can ask for directions"
 
         handler_input.response_builder.speak(speech).set_card(
-            SimpleCard("Traveling from " + start + "to " + finish, speech)).set_should_end_session(
+            SimpleCard("Starting...", speech)).set_should_end_session(
             False)
         return handler_input.response_builder.response
 
+class MapIntentHandler(AbstractRequestHandler):
+    """Handler for Hello World Intent."""
+    def can_handle(self, handler_input):
+        # type: (HandlerInput) -> bool
+        return is_intent_name("mapCall")(handler_input)
+
+    def handle(self, handler_input):
+
+        attributes = handler_input.request_envelope.request.intent.slots
+
+
+        # logger.info(type(attributes))
+        # logger.info(attributes.values())
+        # start = attributes["fromLocation"]
+        # finish = attributes["toLocation"]
+        start = attributes.get('toLocation').to_dict()['value']
+        finish = attributes.get('fromLocation').to_dict()['value']
+
+        # logger.info(type(start))
+
+        if " " in start:
+            start.replace(" ", "+")
+        if " " in finish:
+            finish.replace(" ", "+")
+
+        now = datetime.now()
+        gmaps = googlemaps.Client(key='AIzaSyA1_wX9RiSvGhsrM8_JwFtcCeQ3b5LQfXM')
+        path = gmaps.directions(start, finish, mode = "transit", departure_time = now)
+
+        time = path[0]["legs"][0]["duration"]["text"]
+
+        travel_mode = "Running"
+
+        speech = "It will take " + time + " to reach "  + finish + " from "  + start + " by Train"
+
+        handler_input.response_builder.speak(speech).set_card(
+            SimpleCard("Traveling", speech)).set_should_end_session(
+            True)
+        return handler_input.response_builder.response
 
 class HelpIntentHandler(AbstractRequestHandler):
     """Handler for Help Intent."""
@@ -55,11 +94,11 @@ class HelpIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         
-        speech_text = "Where would you like to go? Please tell me a start and ending location"
+        speech = "Where would you like to go? Please tell me a start and ending location"
 
-        handler_input.response_builder.speak(speech_text).ask(
-            speech_text).set_card(SimpleCard(
-                "Where would you like to go?", speech_text))
+        handler_input.response_builder.speak(speech).ask(
+            speech).set_card(SimpleCard(
+                "Traveling", speech))
         return handler_input.response_builder.response
 
 
@@ -72,10 +111,10 @@ class CancelOrStopIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         
-        speech_text = "No worries, let me know when you need help!"
+        speech = "No worries, let me know when you need help!"
 
-        handler_input.response_builder.speak(speech_text).set_card(
-            SimpleCard("Cancelling", speech_text))
+        handler_input.response_builder.speak(speech).set_card(
+            SimpleCard("Traveling", speech))
         return handler_input.response_builder.response
 
 
@@ -86,11 +125,11 @@ class FallbackIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         
-        speech_text = (
+        speech = (
             "Unable to work with this information  "
             "You can ask me with a start and end point")
-        reprompt = "You can say hello!!"
-        handler_input.response_builder.speak(speech_text).ask(reprompt)
+        reprompt = "You can say locations!!"
+        handler_input.response_builder.speak(speech).ask(reprompt)
         return handler_input.response_builder.response
 
 class SessionEndedRequestHandler(AbstractRequestHandler):
@@ -121,6 +160,7 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
 
 
 sb.add_request_handler(LaunchRequestHandler())
+sb.add_request_handler(MapIntentHandler())
 sb.add_request_handler(HelpIntentHandler())
 sb.add_request_handler(CancelOrStopIntentHandler())
 sb.add_request_handler(FallbackIntentHandler())

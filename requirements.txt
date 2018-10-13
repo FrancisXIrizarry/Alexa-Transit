@@ -1,2 +1,4 @@
 ask-sdk-core
 requests
+googlemaps
+datetime
