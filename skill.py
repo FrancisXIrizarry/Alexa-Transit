@@ -79,7 +79,7 @@ class MapIntentHandler(AbstractRequestHandler):
 
         travel_mode = "Running"
 
-        speech = "It will take " + time + " to reach "  + finish + " from "  + start + " by Train"
+        speech = "It will take " + time + " to reach "  + finish + " from "  + start + " by public transportation"
 
         handler_input.response_builder.speak(speech).set_card(
             SimpleCard("Traveling", speech)).set_should_end_session(
