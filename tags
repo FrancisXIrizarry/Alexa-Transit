@@ -5,3 +5,4 @@
 !_TAG_PROGRAM_NAME	Universal Ctags	/Derived from Exuberant Ctags/
 !_TAG_PROGRAM_URL	https://ctags.io/	/official site/
 !_TAG_PROGRAM_VERSION	0.0.0	/a721a21/
+ALEXA TRANSIT	readme.md	/^## ALEXA TRANSIT$/;"	s
